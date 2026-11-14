@@ -114,8 +114,8 @@ Goal: finish all seven tasks, check the numbers, and submit the PDF report.
 
 **Days 1-2 (Fri-Sat, Nov 13-14): Set up and clean the data**
 
-- [ ] Both (`README.md`, `requirements.txt`, `.gitignore`): Create the repo and the folders. Add this README, `requirements.txt`, and `.gitignore` (include `data/raw/`).
-- [ ] Both: Download the five files from D2L and open each one to see what it looks like.
+- [x] Both (`README.md`, `requirements.txt`, `.gitignore`): Create the repo and the folders. Add this README, `requirements.txt`, and `.gitignore` (include `data/raw/`).
+- [x] Both: Download the five files from D2L and open each one to see what it looks like.
 - [ ] Both: Agree on names for the cleaned CSV files, the random seed, and how to write denominators in the report.
 - [ ] Both: Keep your code in separate parts of `src/data_prep.py` and commit separately, so your changes don't clash.
 - [ ] P1 (`src/data_prep.py`): Read `as-rel2`. Count the comment lines, bad rows, duplicates, and self-links.
