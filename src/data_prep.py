@@ -57,3 +57,22 @@ def drop_conflicts (rows):
             dropped += 1
     return clean_rows, dropped
 
+
+def build_graphs(clean_rows):
+    customers = {}
+    providers = {}
+    peers = {}
+    neighbors = {}
+
+    for a, b, rel in clean_rows:
+        neighbors.setdefault(a, set()).add(b)
+        neighbors.setdefault(b, set()).add(a)
+        if rel == -1:
+            customers.setdefault(a, set()).add(b)
+            providers.setdefault(b, set()).add(a)
+        else:
+            peers.setdefault(a, set()).add(b)
+            peers.setdefault(b, set()).add(a)
+
+    return customers, providers, peers, neighbors
+
