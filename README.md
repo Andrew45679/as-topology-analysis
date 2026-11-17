@@ -118,10 +118,10 @@ Goal: finish all seven tasks, check the numbers, and submit the PDF report.
 - [x] Both: Download the five files from D2L and open each one to see what it looks like.
 - [ ] Both: Agree on names for the cleaned CSV files, the random seed, and how to write denominators in the report.
 - [ ] Both: Keep your code in separate parts of `src/data_prep.py` and commit separately, so your changes don't clash.
-- [ ] P1 (`src/data_prep.py`): Read `as-rel2`. Count the comment lines, bad rows, duplicates, and self-links.
-- [ ] P1 (`src/data_prep.py`): Find AS pairs with two different relationships, pick a rule for them, and write it down.
-- [ ] P1 (`src/data_prep.py`): Save one clean relationship file and build the directed and undirected graphs.
-- [ ] P1 (`src/data_prep.py`): Read the org file. It has two parts with different columns.
+- [x] P1 (`src/data_prep.py`): Read `as-rel2`. Count the comment lines, bad rows, duplicates, and self-links.
+- [x] P1 (`src/data_prep.py`): Find AS pairs with two different relationships, pick a rule for them, and write it down.
+- [x] P1 (`src/data_prep.py`): Save one clean relationship file and build the directed and undirected graphs.
+- [x] P1 (`src/data_prep.py`): Read the org file. It has two parts with different columns.
 - [ ] P2 (`src/data_prep.py`): Read both `as2types` files. Count the comment lines, bad rows, and duplicates.
 - [ ] P2 (`src/data_prep.py`): Read the prefix file, including prefixes with more than one origin AS. Count the same things.
 - [ ] P2 (`src/data_prep.py`, `test_prefix_union.py`): Write the prefix-union function and a test (`10.0.0.0/16` + `10.0.1.0/24` = 65,536).
