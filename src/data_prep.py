@@ -1,5 +1,6 @@
 import csv
 import ipaddress
+from pathlib import Path
 
 
 # Read the AS relationship file and keep only the usable rows.
@@ -294,3 +295,54 @@ def prefix_union_address_count(prefixes):
         networks.append(network)
 
     return sum(network.num_addresses for network in ipaddress.collapse_addresses(networks))
+
+
+# Parse and save P2's classification and prefix datasets as CSV files.
+def save_clean_p2_files(raw_dir="data/raw", processed_dir="data/processed"):
+    raw_dir = Path(raw_dir)
+    processed_dir = Path(processed_dir)
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
+    datasets = (
+        (
+            raw_dir / "20150801.as2types.txt",
+            processed_dir / "as2types_20150801_clean.csv",
+            read_as2types,
+            ("asn", "source", "type"),
+        ),
+        (
+            raw_dir / "20210401.as2types.txt",
+            processed_dir / "as2types_20210401_clean.csv",
+            read_as2types,
+            ("asn", "source", "type"),
+        ),
+        (
+            raw_dir / "routeviews-rv2-20251110-1200.pfx2as",
+            processed_dir / "pfx2as_20251110_clean.csv",
+            read_pfx2as,
+            ("prefix", "prefix_length", "origin_asns"),
+        ),
+    )
+
+    all_counts = {}
+    for raw_path, clean_path, reader, headers in datasets:
+        rows, counts = reader(raw_path)
+        with clean_path.open("w", newline="", encoding="utf-8") as clean_file:
+            writer = csv.writer(clean_file)
+            writer.writerow(headers)
+            for row in rows:
+                if headers[0] == "prefix":
+                    prefix, prefix_length, origins = row
+                    writer.writerow(
+                        (prefix.split("/")[0], prefix_length, "_".join(map(str, origins)))
+                    )
+                else:
+                    writer.writerow(row)
+        all_counts[clean_path.name] = counts
+
+    return all_counts
+
+
+if __name__ == "__main__":
+    for filename, counts in save_clean_p2_files().items():
+        print(f"{filename}: {counts}")
