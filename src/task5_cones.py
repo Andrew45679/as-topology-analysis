@@ -6,7 +6,7 @@ from data_prep import read_as_rel2, drop_conflicts, build_graphs, read_as_org
 rows, counts = read_as_rel2("data/raw/20241101.as-rel2.txt")
 clean_rows, dropped = drop_conflicts(rows)
 customers, providers, peers, neighbors = build_graphs(clean_rows)
-as_names, org_counts = read_as_org("data/raw/20251001.as-org2info1.txt")
+as_names, org_counts = read_as_org("data/raw/20251001.as-org2info.txt")
 
 
 # Customer cone: the AS itself plus every AS reachable by going
