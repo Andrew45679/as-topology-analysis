@@ -137,7 +137,7 @@ plt.close()
 # Top-10 ASes by global degree, with all four degrees
 top10 = sorted(degrees, key=lambda r: r[1], reverse=True)[:10]
 
-with open("figures/table_top10_degree.csv", "w", newline="") as f:
+with open("figures/task2_table_top10_degree.csv", "w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["rank", "asn", "d", "d_c", "d_p", "d_r"])
     for i, row in enumerate(top10, 1):
