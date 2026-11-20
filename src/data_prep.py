@@ -171,3 +171,33 @@ def read_as_org(file_path):
             counts["no_org_name"] += 1
 
     return as_names, counts
+
+# Read the AS business classification files.
+# Returns a dictionary of counts for the lines that were skipped.
+def read_as2types(file_path):
+    counts = {
+        "comment_lines": 0,
+        "bad_rows": 0,
+        "duplicates": 0
+    }
+
+    rows = []
+    seen = set()
+
+    with open(file_path, encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("#"):
+                counts["comment_lines"] += 1
+                continue
+
+            parts = line.strip().split("|")
+
+            as_id, src_name, category = parts
+
+            if (as_id, src_name, category) in seen:
+                counts["duplicates"] += 1
+            else:
+                seen.add((as_id, src_name, category))
+                rows.append((as_id, src_name, category))
+
+    return rows, counts
