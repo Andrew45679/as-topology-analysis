@@ -43,6 +43,11 @@ CAIDA relationships and classifications are inferences from available observatio
 
 `data_prep.py` is the only shared file. It holds the cleaning rules and the conflict policy so every task uses identical data. Each task script imports from it and writes its own plots and tables to `figures/`.
 
+Running `python src/data_prep.py` writes the cleaned P2 datasets to `data/processed/`:
+
+- `as2types_20150801_clean.csv` and `as2types_20210401_clean.csv` (`asn`, `source`, `type`)
+- `pfx2as_20251110_clean.csv` (`prefix`, `prefix_length`, `origin_asns`; multiple origins are underscore-separated)
+
 ## Setup
 
 Requires Python 3.9 or newer.
@@ -116,15 +121,15 @@ Goal: finish all seven tasks, check the numbers, and submit the PDF report.
 
 - [x] Both (`README.md`, `requirements.txt`, `.gitignore`): Create the repo and the folders. Add this README, `requirements.txt`, and `.gitignore` (include `data/raw/`).
 - [x] Both: Download the five files from D2L and open each one to see what it looks like.
-- [ ] Both: Agree on names for the cleaned CSV files, the random seed, and how to write denominators in the report.
-- [ ] Both: Keep your code in separate parts of `src/data_prep.py` and commit separately, so your changes don't clash.
+- [x] Both: Agree on names for the cleaned CSV files, the random seed, and how to write denominators in the report.
+- [x] Both: Keep your code in separate parts of `src/data_prep.py` and commit separately, so your changes don't clash.
 - [x] P1 (`src/data_prep.py`): Read `as-rel2`. Count the comment lines, bad rows, duplicates, and self-links.
 - [x] P1 (`src/data_prep.py`): Find AS pairs with two different relationships, pick a rule for them, and write it down.
 - [x] P1 (`src/data_prep.py`): Save one clean relationship file and build the directed and undirected graphs.
 - [x] P1 (`src/data_prep.py`): Read the org file. It has two parts with different columns.
-- [ ] P2 (`src/data_prep.py`): Read both `as2types` files. Count the comment lines, bad rows, and duplicates.
-- [ ] P2 (`src/data_prep.py`): Read the prefix file, including prefixes with more than one origin AS. Count the same things.
-- [ ] P2 (`src/data_prep.py`, `test_prefix_union.py`): Write the prefix-union function and a test (`10.0.0.0/16` + `10.0.1.0/24` = 65,536).
+- [x] P2 (`src/data_prep.py`): Read both `as2types` files. Count the comment lines, bad rows, and duplicates.
+- [x] P2 (`src/data_prep.py`): Read the prefix file, including prefixes with more than one origin AS. Count the same things.
+- [x] P2 (`src/data_prep.py`, `test_prefix_union.py`): Write the prefix-union function and a test (`10.0.0.0/16` + `10.0.1.0/24` = 65,536).
 - [ ] Both: Keep a log of every count from cleaning. You will need these numbers for the report.
 - [ ] Milestone (Day 2): the clean relationship and prefix data are saved and the prefix-union test passes. If not, fix this first.
 
