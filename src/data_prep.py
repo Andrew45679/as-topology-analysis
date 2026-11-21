@@ -1,4 +1,6 @@
 import csv
+import ipaddress
+from pathlib import Path
 
 
 # Read the AS relationship file and keep only the usable rows.
@@ -171,3 +173,176 @@ def read_as_org(file_path):
             counts["no_org_name"] += 1
 
     return as_names, counts
+
+
+# Read the AS business classification files.
+# Returns good rows and a dictionary of counts for the lines that were skipped.
+#   Format: as|source|type
+def read_as2types(file_path):
+    counts = {
+        "comment_lines": 0,
+        "bad_rows": 0,
+        "duplicates": 0
+    }
+
+    rows = []
+    seen = set()
+
+    with open(file_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("#"):
+                counts["comment_lines"] += 1
+                continue
+
+            parts = line.split("|")
+            if len(parts) != 3:
+                counts["bad_rows"] += 1
+                continue
+
+            try:
+                as_id = int(parts[0])
+            except ValueError:
+                counts["bad_rows"] += 1
+                continue
+
+            src_name, category = parts[1].strip(), parts[2].strip()
+            if as_id < 1 or as_id > 4294967294 or not src_name or not category:
+                counts["bad_rows"] += 1
+                continue
+
+            if (as_id, src_name, category) in seen:
+                counts["duplicates"] += 1
+            else:
+                seen.add((as_id, src_name, category))
+                rows.append((as_id, src_name, category))
+
+    return rows, counts
+
+
+# Read the prefix-to-AS file.
+# The dataset is used for IPv4 only.
+# If a prefix has more than one origin AS, associate the prefix with each listed 
+# origin for per-AS results, and count it only once when forming global unions.
+# Returns good rows and a dictionary of counts for the lines that were skipped.
+#   Format: IP_prefix   prefix_length   set_of_AS_numbers
+#   Ex.:    16.14.207.0	24	20115
+#           16.14.224.0	22	7843_20115
+def read_pfx2as(file_path):
+    counts = {
+        "comment_lines": 0,
+        "bad_rows": 0,
+        "duplicates": 0
+    }
+
+    rows = []
+    seen = set()
+
+    with open(file_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("#"):
+                counts["comment_lines"] += 1
+                continue
+            if not line:
+                counts["bad_rows"] += 1
+                continue
+
+            parts = line.split("\t")
+            if len(parts) != 3:
+                counts["bad_rows"] += 1
+                continue
+
+            pfx, length_text, origin_text = parts
+            try:
+                pfx_length = int(length_text)
+                network = ipaddress.ip_network(f"{pfx}/{pfx_length}", strict=False)
+            except (ValueError, ipaddress.AddressValueError, ipaddress.NetmaskValueError):
+                counts["bad_rows"] += 1
+                continue
+
+            if network.version != 4 or not 0 <= pfx_length <= 32:
+                counts["bad_rows"] += 1
+                continue
+
+            origin_parts = origin_text.replace(",", "_").split("_")
+            try:
+                origins = tuple(sorted(set(int(origin) for origin in origin_parts)))
+            except ValueError:
+                counts["bad_rows"] += 1
+                continue
+
+            if not origins or any(origin < 1 or origin > 4294967294 for origin in origins):
+                counts["bad_rows"] += 1
+                continue
+
+            canonical_row = (str(network), pfx_length, origins)
+            if canonical_row in seen:
+                counts["duplicates"] += 1
+            else:
+                seen.add(canonical_row)
+                rows.append(canonical_row)
+
+    return rows, counts
+
+# Return the number of unique IPv4 addresses covered by prefixes.
+def prefix_union_address_count(prefixes):
+    networks = []
+    for prefix in prefixes:
+        network = ipaddress.ip_network(prefix, strict=False)
+        if network.version != 4:
+            raise ValueError("prefix_union_address_count supports IPv4 only")
+        networks.append(network)
+
+    return sum(network.num_addresses for network in ipaddress.collapse_addresses(networks))
+
+
+# Parse and save P2's classification and prefix datasets as CSV files.
+def save_clean_p2_files(raw_dir="data/raw", processed_dir="data/processed"):
+    raw_dir = Path(raw_dir)
+    processed_dir = Path(processed_dir)
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
+    datasets = (
+        (
+            raw_dir / "20150801.as2types.txt",
+            processed_dir / "as2types_20150801_clean.csv",
+            read_as2types,
+            ("asn", "source", "type"),
+        ),
+        (
+            raw_dir / "20210401.as2types.txt",
+            processed_dir / "as2types_20210401_clean.csv",
+            read_as2types,
+            ("asn", "source", "type"),
+        ),
+        (
+            raw_dir / "routeviews-rv2-20251110-1200.pfx2as",
+            processed_dir / "pfx2as_20251110_clean.csv",
+            read_pfx2as,
+            ("prefix", "prefix_length", "origin_asns"),
+        ),
+    )
+
+    all_counts = {}
+    for raw_path, clean_path, reader, headers in datasets:
+        rows, counts = reader(raw_path)
+        with clean_path.open("w", newline="", encoding="utf-8") as clean_file:
+            writer = csv.writer(clean_file)
+            writer.writerow(headers)
+            for row in rows:
+                if headers[0] == "prefix":
+                    prefix, prefix_length, origins = row
+                    writer.writerow(
+                        (prefix.split("/")[0], prefix_length, "_".join(map(str, origins)))
+                    )
+                else:
+                    writer.writerow(row)
+        all_counts[clean_path.name] = counts
+
+    return all_counts
+
+
+if __name__ == "__main__":
+    for filename, counts in save_clean_p2_files().items():
+        print(f"{filename}: {counts}")
