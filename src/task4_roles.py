@@ -7,6 +7,7 @@ import csv
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -113,6 +114,53 @@ def task4():
     fig.savefig(output_path, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"\nSaved contingency table: {output_path}")
+
+    percentages = {}
+    for business_label in BUSINESS_LABELS:
+        row_total = sum(contingency[business_label].values())
+        if row_total == 0:
+            raise ValueError(f"No matched ASes for business label {business_label!r}")
+        percentages[business_label] = {
+            role: contingency[business_label][role] / row_total * 100
+            for role in STRUCTURAL_LABELS
+        }
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bottoms = [0.0] * len(BUSINESS_LABELS)
+    colors = ["tab:blue", "tab:orange", "tab:green"]
+    for role, color in zip(STRUCTURAL_LABELS, colors):
+        role_percentages = [
+            percentages[business_label][role]
+            for business_label in BUSINESS_LABELS
+        ]
+        ax.bar(
+            BUSINESS_LABELS,
+            role_percentages,
+            bottom=bottoms,
+            label=role,
+            color=color,
+            edgecolor="white",
+        )
+        bottoms = [
+            bottom + percentage
+            for bottom, percentage in zip(bottoms, role_percentages)
+        ]
+
+    ax.set_ylim(0, 100)
+    ax.set_ylabel("ASes within business class (%)")
+    ax.set_xlabel("2021 business class")
+    ax.set_title(
+        f"Graph 5: Structural roles by business class (matched N = {len(matched_asns):,})"
+    )
+    ax.yaxis.set_major_formatter(PercentFormatter(xmax=100, decimals=0))
+    ax.grid(axis="y", alpha=0.3)
+    ax.set_axisbelow(True)
+    ax.legend(title="2024 structural role")
+    fig.tight_layout()
+    chart_path = FIGURES_DIR / "graph5_structural_roles.png"
+    fig.savefig(chart_path, dpi=200, bbox_inches="tight")
+    plt.close(fig)
+    print(f"Saved normalized stacked bar chart: {chart_path}")
 
 
 if __name__ == "__main__":
