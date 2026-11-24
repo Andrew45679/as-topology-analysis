@@ -21,17 +21,10 @@ DATA_DIR = REPO_ROOT / "data" / "processed"
 FIGURES_DIR = REPO_ROOT / "figures"
 
 
-def greedy_clique(ranked_asns, neighbors, seed=None, stop_on_failure=False):
-    """Build a clique by degree rank, optionally starting from one backup seed."""
-    if seed is not None:
-        clique = [seed]
-    else:
-        clique = [ranked_asns[0]]
-
-    candidates = ranked_asns if seed is not None else ranked_asns[1:]
-    for asn in candidates:
-        if seed is not None and asn == seed:
-            continue
+def greedy_clique(ranked_asns, neighbors, stop_on_failure=False):
+    """Build a clique from the first AS in degree order."""
+    clique = [ranked_asns[0]]
+    for asn in ranked_asns[1:]:
         if all(asn in neighbors[current] for current in clique):
             clique.append(asn)
         elif stop_on_failure:
@@ -41,17 +34,12 @@ def greedy_clique(ranked_asns, neighbors, seed=None, stop_on_failure=False):
 
 
 def find_candidate_tier1(ranked_asns, neighbors):
-    """Run the primary pass, then try the top 50 ASes as backup seeds."""
+    """Run the primary pass, then skip failed candidates within the top 50."""
     primary = greedy_clique(ranked_asns, neighbors, stop_on_failure=True)
     if len(primary) >= 10:
         return primary
 
-    best = primary
-    for seed in ranked_asns[:50]:
-        candidate = greedy_clique(ranked_asns, neighbors, seed=seed)
-        if len(candidate) > len(best):
-            best = candidate
-    return best
+    return greedy_clique(ranked_asns[:50], neighbors)
 
 
 def task7():
